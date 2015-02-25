@@ -1,5 +1,6 @@
 'use strict';
 
+var path = require('path');
 var Filter = require('broccoli-filter');
 
 function TemplateCompiler (inputTree, options) {
@@ -47,8 +48,17 @@ TemplateCompiler.prototype.initializeFeatures = function initializeFeatures() {
   }
 };
 
-TemplateCompiler.prototype.processString = function (string/*, relativePath */) {
-  return 'export default Ember.HTMLBars.template(' + this.precompile(string, false) + ');';
+TemplateCompiler.prototype.processString = function (string, relativePath) {
+  var extensionRegex = /.handlebars|.hbs/gi;
+  var filename = relativePath.toString().split('templates' + path.sep).reverse()[0].replace(extensionRegex, '');
+  var input = this.precompile(string, false);
+  var template = "Ember.Handlebars.template(" + input + ");\n";
+  if (this.options.module === true) {
+    return 'export default Ember.HTMLBars.template(' + input + ');';
+  }
+  else {
+    return "Ember.TEMPLATES['" + filename + "'] = " + template;
+  }
 };
 
 module.exports = TemplateCompiler;
